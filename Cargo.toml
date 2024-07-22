@@ -6,6 +6,7 @@ edition = "2021"
 
 [dependencies]
 futures-util = "0.3.30"
-langchain-rust = { version = "4.3.0", features = ["ollama", "ollama-rs"] }
+langchain-rust = { version = "4.3.0", features = ["ollama", "qdrant"] }
 serde_json = "1.0.120"
-tokio = "1.38.0"
+tokio = "1.38.1"
+
