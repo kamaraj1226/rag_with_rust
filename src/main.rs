@@ -1,35 +1,26 @@
-mod libs {
-    mod embeddings;
-    mod loaders;
-    mod qdrant;
-    pub use embeddings::embeddings::Embeddings;
-    pub use qdrant::qdrant::QdrantBase;
-}
+mod cli_chat;
+mod utils;
 
-use libs::Embeddings;
-use libs::QdrantBase;
+const EMBEDDING_MODEL: &str = "nomic-embed-text";
+const CONNECTION_URL: &str = "http://localhost:6334";
 
 #[tokio::main]
 async fn main() {
-    let embedding_model = String::from("mxbai-embed-large");
-    let collection_name = String::from("lora");
-    let qdrant_url = String::from("http://localhost:6334");
+    // let model_name: String = String::from("deepseek-r1:1.5b");
+    println!("=============starting ollama ==================");
+    let base_init_required: bool = false;
+    let collection_name: &str = "rag_test_store";
 
-    let _embedding = Embeddings { embedding_model };
-
-    let _qdrant = QdrantBase {
-        emdedder: _embedding.clone(),
-        collection_name,
-        qdrant_url,
-    };
-
-    const TOLOAD: bool = false;
-    if TOLOAD {
-        let pdf_path = String::from("./src/data/lora.pdf");
-        _qdrant.add_pdf(pdf_path, false).await;
+    if base_init_required {
+        utils::base_init(collection_name, &EMBEDDING_MODEL).await;
     }
 
-    let query: String = String::from("what is lora?");
-    let query_embedding = _embedding.get_embedding(&query).await;
-    println!("{:?}", query_embedding.get(1));
+    let cli_chat = cli_chat::CliChat::new(
+        &EMBEDDING_MODEL,
+        utils::models::LlmModels::DeepseekR1_8b,
+        collection_name,
+    )
+    .await;
+
+    cli_chat.cli_chat().await;
 }
