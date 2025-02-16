@@ -1,9 +1,5 @@
 use crate::utils::{self, chat::Chat, models::LlmModels};
-use langchain_rust::{
-    chain::Chain, llm::client::Ollama, memory::SimpleMemory, prompt_args, schemas::BaseMemory,
-};
-use std::sync::Arc;
-use tokio::sync::Mutex;
+use langchain_rust::{chain::Chain, llm::client::Ollama, prompt_args};
 
 pub mod cli;
 
@@ -11,8 +7,7 @@ pub mod cli;
 pub struct CliChat<'a, 'b> {
     embedding_model_name: &'a str,
     collection_name: &'b str,
-    pub model: Ollama,
-    memory: Arc<Mutex<SimpleMemory>>,
+    model: Ollama,
 }
 
 impl<'a, 'b> CliChat<'a, 'b> {
@@ -22,18 +17,16 @@ impl<'a, 'b> CliChat<'a, 'b> {
         collection_name: &'b str,
     ) -> Self {
         let model = utils::get_model(model_name.as_str()).await;
-        let memory = utils::get_memory();
 
         CliChat {
             embedding_model_name,
             collection_name,
             model,
-            memory,
         }
     }
 
     pub async fn cli_chat(&self) {
-        let memory = self.memory.clone();
+        // let memory = self.memory;
         let chain = self.get_chain().await;
         // chain.memory
         let mut query: String;
@@ -41,13 +34,19 @@ impl<'a, 'b> CliChat<'a, 'b> {
         loop {
             utils::print_user_prompt();
             query = utils::get_query();
-            if query.trim() == String::from("exit") {
+            if query.trim() == String::from("\\exit") {
                 break;
             }
 
-            if query.trim() == String::from("clear") {
-                memory.lock().await.clear();
+            if query.trim() == String::from("\\clear") {
+                chain.memory.lock().await.clear();
                 println!("Memory cleared");
+                continue;
+            }
+
+            if query.trim() == String::from("\\show") {
+                let memory = chain.memory.lock().await.messages();
+                println!("{:?}", memory);
                 continue;
             }
 
